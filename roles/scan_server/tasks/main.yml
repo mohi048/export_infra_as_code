@@ -1,0 +1,64 @@
+---
+
+- name: Get Kernel version
+  shell: uname -r | egrep '^[0-9]*\.[0-9]*\.[0-9]*\-[0-9]*\.[0-9]*\.[0-9]*' -o
+  register: kernel_shell_output
+
+- name: Gather full Kernel version
+  shell: uname -r
+  register: kernel_shell_output_full
+
+- name: Get host name
+  shell: hostname
+  register: host_name
+
+- name: Get correct hostname as per the login window
+  shell: "grep 'Hostname' /etc/motd | rev | cut -d: -f1 | rev | tr -d ' '"
+  register: actual_hostname
+
+- name: Get applications running on the server
+  shell: "grep 'Applications' /etc/motd | rev | cut -d: -f1 | rev | tr -d ' '"
+  register: apps
+
+- name: check if docker is present
+  shell: "rpm -qa|grep docker" 
+  register: docker_rpm_present
+
+- name: Get the running container details
+  shell: "docker ps -a -q"
+  register: docker_running_containers
+  when: docker_rpm_present.failed == false
+
+
+- name: writing data to local file
+  local_action: template src=templates/dump_data.j2 dest=/tmp/test_file.txt
+  delegate_to: 127.0.0.1
+  become: false
+  with_items:
+    - actual_hostname
+    - apps
+    - kernel_shell_output
+    - kernel_shell_output_full
+    - docker_rpm_present
+    - docker_running_containers
+  when: docker_rpm_present.failed == false
+
+- name: writing data to local file
+  local_action: template src=templates/dump_data.j2 dest=/tmp/test_file.txt
+  delegate_to: 127.0.0.1
+  become: false
+  with_items:
+    - actual_hostname
+    - apps
+    - kernel_shell_output
+    - kernel_shell_output_full
+  when: docker_rpm_present.failed == true
+
+
+
+- name: Include vars of stuff.yml into the 'stuff' variable (2.2).
+  include_vars:
+    delegate_to: 127.0.0.1
+    become: false
+    file: /tmp/test_file.txt
+    name: stuff

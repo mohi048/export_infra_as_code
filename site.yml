@@ -1,0 +1,5 @@
+---
+  - hosts: "{{ app }}"
+    #user: {{ansible_user_id}}
+    roles:
+         - scan_server

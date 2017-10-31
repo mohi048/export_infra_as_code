@@ -1,0 +1,16 @@
+    {
+{% for host in groups[app]%}
+
+"{{ host }}":
+    {
+        "host_name": "{{ actual_hostname.stdout}}",
+            "apps_installed": {{apps.stdout.split(',')}},
+                "kernel_short_version": "{{kernel_shell_output.stdout}}",
+                    "kernel_full_version": "{{kernel_shell_output_full.stdout}}",
+                        "docker_rpms":"{{docker_rpm_present.stdout_lines}}",
+                            "docker_containers": "{{docker_running_containers.stdout_lines}}",
+    },
+
+
+{%endfor%}
+    }
